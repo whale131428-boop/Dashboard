@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Device Dashboard - Coffee Cat Café</title>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F5EBE0 0%, #E8DCC8 100%);
+            color: #5C4033;
+            font-family: 'Courier Prime', monospace;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        /* Soft pixel texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(139, 111, 71, 0.01),
+                rgba(139, 111, 71, 0.01) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Cute cat animation background */
+        body::after {
+            content: '🐱';
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 60px;
+            opacity: 0.1;
+            z-index: 0;
+            pointer-events: none;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Pixel art border style */
+        .pixel-border {
+            border: 4px solid #8B6F47;
+            box-shadow: 
+                inset 0 0 0 2px #C17A4C,
+                0 0 20px rgba(139, 111, 71, 0.2),
+                0 0 40px rgba(193, 122, 76, 0.1);
+            background: rgba(245, 235, 224, 0.95);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* Cute cat corner decorations */
+        .pixel-border::before {
+            content: '☕';
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            font-size: 24px;
+            opacity: 0.7;
+        }
+
+        .pixel-border::after {
+            content: '🐾';
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            font-size: 24px;
+            opacity: 0.7;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: gentle-glow 3s ease-in-out infinite;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            text-shadow: 
+                0 0 5px rgba(139, 111, 71, 0.3),
+                0 0 10px rgba(193, 122, 76, 0.2);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            color: #8B6F47;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #C17A4C;
+            text-shadow: 0 0 5px rgba(193, 122, 76, 0.2);
+        }
+
+        @keyframes gentle-glow {
+            0%, 100% { text-shadow: 0 0 5px rgba(139, 111, 71, 0.3), 0 0 10px rgba(193, 122, 76, 0.2); }
+            50% { text-shadow: 0 0 10px rgba(139, 111, 71, 0.4), 0 0 15px rgba(193, 122, 76, 0.3); }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            border: 3px solid #C17A4C;
+            padding: 15px;
+            text-align: center;
+            background: linear-gradient(135deg, #FFF8F0 0%, #F5EBE0 100%);
+            box-shadow: inset 0 0 10px rgba(193, 122, 76, 0.1);
+            position: relative;
+        }
+
+        .stat-box::before {
+            content: '☕';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+            opacity: 0.6;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8B6F47;
+            text-shadow: 0 0 5px rgba(139, 111, 71, 0.2);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #C17A4C;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .device-card {
+            border: 3px solid #8B6F47;
+            padding: 20px;
+            background: linear-gradient(135deg, #FFFBF7 0%, #FFF5ED 100%);
+            box-shadow: 
+                inset 0 0 0 1px #C17A4C,
+                0 0 15px rgba(139, 111, 71, 0.1),
+                4px 4px 0px rgba(193, 122, 76, 0.15);
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .device-card:grab {
+            cursor: grabbing;
+        }
+
+        .device-card:hover {
+            box-shadow: 
+                inset 0 0 0 1px #C17A4C,
+                0 0 25px rgba(139, 111, 71, 0.2),
+                6px 6px 0px rgba(193, 122, 76, 0.25);
+            transform: translateY(-4px);
+        }
+
+        .device-card.dragging {
+            opacity: 0.8;
+            box-shadow: 
+                0 0 30px rgba(193, 122, 76, 0.4),
+                8px 8px 0px rgba(139, 111, 71, 0.3);
+        }
+
+        /* Pixel art corners */
+        .device-card::before,
+        .device-card::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #C17A4C;
+        }
+
+        .device-card::before {
+            top: -1px;
+            left: -1px;
+        }
+
+        .device-card::after {
+            bottom: -1px;
+            right: -1px;
+        }
+
+        .device-type {
+            display: inline-block;
+            background: #D4A574;
+            color: #5C4033;
+            padding: 4px 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border: 2px solid #8B6F47;
+            font-weight: bold;
+        }
+
+        .device-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #8B6F47;
+            text-shadow: 0 0 4px rgba(139, 111, 71, 0.1);
+        }
+
+        .device-info {
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: #5C4033;
+        }
+
+        .info-label {
+            color: #C17A4C;
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            margin-top: 15px;
+            border: 2px solid currentColor;
+            border-radius: 4px;
+        }
+
+        .status-indicator.clickable {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .status-indicator.clickable:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .status-indicator.clickable:active {
+            transform: scale(0.98);
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: inherit;
+            font-family: 'Courier Prime', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn:hover {
+            text-shadow: 0 0 8px currentColor;
+        }
+
+        .status-led {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: 0 0 6px currentColor, inset 0 0 3px currentColor;
+        }
+
+        .status-active {
+            color: #8B6F47;
+            background: rgba(139, 111, 71, 0.1);
+        }
+
+        .status-active .status-led {
+            background: #8B6F47;
+            animation: warm-blink 0.5s infinite;
+        }
+
+        .status-inactive {
+            color: #C17A4C;
+            background: rgba(193, 122, 76, 0.1);
+        }
+
+        .status-inactive .status-led {
+            background: #C17A4C;
+            animation: dim-blink 1s infinite;
+        }
+
+        @keyframes warm-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        @keyframes dim-blink {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.5; }
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #8B6F47;
+            border-top: 2px solid #8B6F47;
+            padding-top: 20px;
+            margin-top: 30px;
+        }
+
+        .refresh-btn {
+            background: #D4A574;
+            color: #5C4033;
+            border: 3px solid #8B6F47;
+            padding: 12px 24px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 12px rgba(139, 111, 71, 0.2), 3px 3px 0px rgba(193, 122, 76, 0.3);
+            transition: all 0.2s ease;
+            display: block;
+            margin: 0 auto 30px;
+        }
+
+        .refresh-btn:hover {
+            background: #C17A4C;
+            color: #FFF8F0;
+            box-shadow: 0 0 20px rgba(193, 122, 76, 0.4), 4px 4px 0px rgba(139, 111, 71, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(1px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 14px;
+            color: #8B6F47;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #C17A4C;
+            border-top-color: #8B6F47;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(193, 122, 76, 0.1);
+            border: 2px solid #C17A4C;
+            color: #8B6F47;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .devices-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☕ COFFEE CAT CAFÉ ☕</h1>
+            <p>>>> 🐱 Cozy IoT Device Lounge 🐱 <<<</p>
+        </div>
+
+        <button class="refresh-btn" onclick="fetchDevices()">☕ BREW DATA ☕</button>
+
+        <div id="stats" class="stats"></div>
+
+        <div class="pixel-border">
+            <div id="devices" class="devices-grid"></div>
+        </div>
+
+        <div class="footer">
+            <p>🐾 PURR STATUS: ONLINE | ☕ COFFEE: WARM | LAST UPDATE: <span id="timestamp">--:--:--</span> 🐾</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://tc.sbtc-mng.com/api.php';
+        let draggedElement = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        async function fetchDevices() {
+            const devicesContainer = document.getElementById('devices');
+            const statsContainer = document.getElementById('stats');
+            
+            devicesContainer.innerHTML = '<div class="loading"><span class="spinner"></span>Brewing fresh data...</div>';
+            
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('API Error');
+                
+                const data = await response.json();
+                
+                if (!data.success || !data.data) throw new Error('Invalid data');
+                
+                renderDevices(data.data);
+                renderStats(data.data);
+                updateTimestamp();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                devicesContainer.innerHTML = `<div class="error">☕ OOPS! COFFEE SPILLED!<br>Cannot connect to the café server<br>${error.message}</div>`;
+                statsContainer.innerHTML = '<div class="error" style="grid-column: 1/-1;">⚠ CONNECTION ISSUE - Time to refill the coffee pot!</div>';
+            }
+        }
+
+        function renderDevices(devices) {
+            const container = document.getElementById('devices');
+            container.innerHTML = '';
+            
+            devices.forEach(device => {
+                const isActive = device.status === 'ON' || device.status === 'ACTIVE';
+                const statusClass = isActive ? 'status-active' : 'status-inactive';
+                const isLED = device.device_type === 'LED';
+                
+                let statusHTML = '';
+                
+                if (isLED) {
+                    // LED devices get toggle buttons
+                    statusHTML = `
+                        <div class="status-indicator ${statusClass} clickable" data-device-id="${device.id}">
+                            <div class="status-led"></div>
+                            <button class="toggle-btn" onclick="toggleLED(event, '${device.id}', '${device.device_name}')">
+                                ${isActive ? '🟢 ON' : '🔴 OFF'}
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    // Sensor devices show status only
+                    const statusText = isActive ? '● ACTIVE' : '○ SLEEPING';
+                    statusHTML = `
+                        <div class="status-indicator ${statusClass}">
+                            <div class="status-led"></div>
+                            <span>${statusText}</span>
+                        </div>
+                    `;
+                }
+                
+                const card = document.createElement('div');
+                card.className = 'device-card';
+                card.id = `device-${device.id}`;
+                card.draggable = true;
+                card.innerHTML = `
+                    <div class="device-type">${device.device_type}</div>
+                    <div class="device-name">🐱 ${device.device_name}</div>
+                    <div class="device-info"><span class="info-label">PIN:</span> ${device.pin}</div>
+                    <div class="device-info"><span class="info-label">ID:</span> ${device.id}</div>
+                    <div class="device-info"><span class="info-label">CREATED:</span> ${new Date(device.created_at).toLocaleDateString()}</div>
+                    ${statusHTML}
+                `;
+                
+                // Drag events
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('drag', handleDrag);
+                card.addEventListener('dragend', handleDragEnd);
+                
+                container.appendChild(card);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            offsetX = e.clientX - this.offsetLeft;
+            offsetY = e.clientY - this.offsetTop;
+        }
+
+        function handleDrag(e) {
+            if (draggedElement) {
+                draggedElement.style.position = 'fixed';
+                draggedElement.style.zIndex = '100';
+                draggedElement.style.left = (e.clientX - offsetX) + 'px';
+                draggedElement.style.top = (e.clientY - offsetY) + 'px';
+                draggedElement.style.pointerEvents = 'none';
+            }
+        }
+
+        function handleDragEnd(e) {
+            if (draggedElement) {
+                draggedElement.classList.remove('dragging');
+                draggedElement.style.position = 'relative';
+                draggedElement.style.left = '0';
+                draggedElement.style.top = '0';
+                draggedElement.style.pointerEvents = 'auto';
+                draggedElement.style.zIndex = 'auto';
+            }
+            draggedElement = null;
+        }
+
+        function toggleLED(event, deviceId, deviceName) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const card = document.getElementById(`device-${deviceId}`);
+            const indicator = card.querySelector('.status-indicator');
+            const button = event.target.closest('.toggle-btn');
+            
+            const currentlyOn = indicator.classList.contains('status-active');
+            const newState = currentlyOn ? 'OFF' : 'ON';
+            
+            // Update UI immediately
+            if (newState === 'ON') {
+                indicator.classList.remove('status-inactive');
+                indicator.classList.add('status-active');
+                button.textContent = '🟢 ON';
+            } else {
+                indicator.classList.remove('status-active');
+                indicator.classList.add('status-inactive');
+                button.textContent = '🔴 OFF';
+            }
+            
+            // Add visual feedback
+            card.style.animation = 'none';
+            setTimeout(() => {
+                card.style.animation = '';
+            }, 10);
+            
+            // Try to send to API (optional)
+            // This assumes the API has an endpoint to control devices
+            // Adjust the endpoint and payload according to your API
+            console.log(`${deviceName} toggled to ${newState}`);
+            
+            // Optional: send to API
+            // fetch(`http://tc.sbtc-mng.com/api.php`, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ id: deviceId, status: newState })
+            // }).catch(err => console.error('API call failed:', err));
+        }
+
+        function renderStats(devices) {
+            const container = document.getElementById('stats');
+            
+            const totalDevices = devices.length;
+            const activeDevices = devices.filter(d => d.status === 'ON' || d.status === 'ACTIVE').length;
+            const leds = devices.filter(d => d.device_type === 'LED').length;
+            const sensors = devices.filter(d => d.device_type === 'SENSOR').length;
+            
+            const stats = [
+                { number: totalDevices, label: 'Total Devices', emoji: '📊' },
+                { number: activeDevices, label: 'Active', emoji: '✅' },
+                { number: leds, label: 'LEDs', emoji: '💡' },
+                { number: sensors, label: 'Sensors', emoji: '📡' }
+            ];
+            
+            container.innerHTML = stats.map(stat => `
+                <div class="stat-box">
+                    <span class="stat-number">${stat.emoji} ${stat.number}</span>
+                    <span class="stat-label">${stat.label}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateTimestamp() {
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('timestamp').textContent = timestamp;
+        }
+
+        // Initial load
+        fetchDevices();
+        
+        // Auto-refresh every 10 seconds
+        setInterval(fetchDevices, 10000);
+    </script>
+</body>
+</html>
